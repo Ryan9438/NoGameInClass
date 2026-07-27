@@ -1,83 +1,80 @@
-# NoGameInClass 🔥
+# NoGameInClass
 
-**整治在校园网上打游戏的小崽子们，还我清净网络环境。**
+校园网络公平使用工具。在设备热点上自动识别并限制游戏流量，保障正常学习用网。
 
-国际学校学生都懂：打开希沃白板热点 → 8 台设备上限 → 一群人在上面打原神打 Steam → 你连个 GitHub push 都跑不动。
+## 背景
 
-这个项目就是为了治这帮人写的。
+国际学校常见场景：教室通过希沃白板开启 Wi-Fi 热点共享网络，设备连接上限 8 台。当部分设备占用带宽进行游戏时，其余设备正常学习（查资料、提交作业、GitHub push 等）会受到严重影响。
+
+本项目旨在通过流量识别与调控，恢复网络资源的公平分配。
 
 ## 原理
 
-装在那台开热点的 Windows 电脑上，用 [WinDivert](https://github.com/basil00/WinDivert) 劫持所有经过热点的网络包，用深度包检测（DNS + SNI + 端口分析）识别出游戏流量，然后——
+在开启热点的 Windows 主机上运行。基于 [WinDivert](https://github.com/basil00/WinDivert) 在系统网络层拦截所有经过热点的数据包，通过多层检测识别游戏流量，并实施带宽调控。
 
-### 制裁三连
+### 流量识别
 
-1. **限速 50Kbps**：游戏流量？给你限到 50Kbps，连个人物都加载不出来
-2. **周期性断网**：每 2-3 分钟彻底断掉游戏连接至少 1 分钟。刚重连上 → 又断 → 再重连 → 再断
-3. **白名单保护**：Google Classroom、Canvas、GitHub、Zoom 等教育流量完全不受影响
+| 检测层 | 方法 | 覆盖范围 |
+|--------|------|----------|
+| DNS 分析 | 拦截 DNS 查询，匹配游戏域名库 | 148+ 游戏域名 |
+| TLS SNI | 从 HTTPS 握手中提取目标域名 | 加密流量同样可识别 |
+| 端口分析 | 匹配已知游戏服务端口 | Minecraft(25565), Xbox(3074), Steam(27000-27036) 等 |
+| IP 缓存 | 通过 DNS 响应自动关联 IP→域名 | 动态 CDN IP 也可追踪 |
 
-**结果**: 打游戏的人痛不欲生，正常学习的人毫无感觉。
+### 调控策略
+
+1. **带宽限制**：对识别为游戏的流量实施限速（默认 50Kbps），使其无法正常游戏
+2. **周期性连接调控**：每 2-3 分钟对游戏连接进行间歇性调控，持续 1 分钟以上
+3. **白名单保护**：Google Classroom、Canvas、GitHub、Zoom 等教育/学习平台流量完全不受影响
 
 ## 快速开始
 
-### Windows（学校电脑）
+### Windows
 
 ```cmd
-# 1. 装 Python
-# 2. 装依赖
 pip install -r requirements.txt
-
-# 3. 以管理员身份运行（右键 → 以管理员身份运行）
 python src/main.py
 ```
 
-或者直接双击 `启动.bat`（会自动请求管理员权限）。
+需要以管理员身份运行（WinDivert 驱动需要管理员权限）。也可双击 `启动.bat`。
 
-### macOS / Linux（测试用）
+### macOS / Linux（逻辑验证）
 
 ```bash
-# 测试制裁逻辑（不会真的劫持流量）
 python3 src/main.py --test
 ```
 
-### 打包成单文件 exe（U盘即插即用）
+测试模式会模拟各类网络流量，验证识别与调控逻辑，不会实际拦截数据包。
 
-在 Windows 上运行 `build_exe.bat`，生成 `NoGameInClass.exe`，扔 U 盘里带去学校。
+### 打包为单文件 exe
+
+在 Windows 上运行 `build_exe.bat`，生成 `NoGameInClass.exe`，便于 U 盘携带部署。
 
 ## 项目结构
 
 ```
 NoGameInClass/
 ├── src/
-│   ├── main.py           # 主入口
+│   ├── main.py              # 程序入口
 │   ├── engine/
-│   │   ├── capturer.py   # WinDivert 流量劫持
-│   │   ├── classifier.py # 游戏/教育流量分类
-│   │   ├── penalizer.py  # 限速 + 断网状态机
-│   │   └── whitelist.py  # 域名白/黑名单
+│   │   ├── capturer.py      # WinDivert 流量劫持
+│   │   ├── classifier.py    # 流量分类识别
+│   │   ├── penalizer.py     # 带宽调控状态机
+│   │   └── whitelist.py     # 域名白/黑名单管理
 │   ├── utils/
-│   │   ├── dns_monitor.py # DNS 查询提取
-│   │   └── tls_sni.py     # TLS SNI 提取
+│   │   ├── dns_monitor.py   # DNS 查询解析
+│   │   └── tls_sni.py       # TLS SNI 提取
 │   ├── ui/
-│   │   └── console.py    # 制裁实时面板
+│   │   └── console.py       # 状态监控面板
 │   ├── data/
-│   │   ├── game_domains.txt  # 游戏域名黑名单
-│   │   ├── game_ports.txt    # 游戏端口列表
-│   │   └── edu_domains.txt   # 教育域名白名单
-│   └── test_sim.py      # 模拟测试
-├── config.json           # 配置文件
-├── 启动.bat              # Windows 一键启动
-└── build_exe.bat         # 打包 exe 脚本
+│   │   ├── game_domains.txt # 游戏域名列表
+│   │   ├── game_ports.txt   # 游戏端口列表
+│   │   └── edu_domains.txt  # 教育域名白名单
+│   └── test_sim.py          # 模拟测试
+├── config.json              # 运行时配置
+├── 启动.bat                 # Windows 启动脚本
+└── build_exe.bat            # exe 打包脚本
 ```
-
-## 检测能力
-
-| 检测层 | 方法 | 覆盖范围 |
-|--------|------|----------|
-| DNS 劫持 | 拦截 DNS 查询域名 | Steam, Epic, Riot, Blizzard, Roblox, 米哈游 等 148+ 游戏域名 |
-| TLS SNI | 从 HTTPS 握手提取域名 | 同上，加密流量也不放过 |
-| 端口启发 | 游戏专用端口 | Minecraft(25565), Xbox(3074), Steam(27000-27036) 等 |
-| IP 缓存 | DNS 响应自动学习 | 自动关联 IP → 域名 |
 
 ## 配置
 
@@ -94,12 +91,10 @@ NoGameInClass/
 }
 ```
 
-所有参数随便调。觉得 50Kbps 太仁慈？改成 10。觉得断网 1 分钟太短？改成 5。
+## 贡献
 
-## 贡献游戏域名
-
-发现数据库里没有的游戏？提 Issue 或 PR。一个人的发现，全国国际生受益。
+如果发现未覆盖的游戏域名，欢迎提交 Issue 或 PR。项目域名列表采用社区维护方式，共同完善识别覆盖。
 
 ## 免责声明
 
-本项目的唯一目的是维护校园网络的公平使用。请合法使用，不要在未经授权的网络上运行。
+本项目的目的是在合理范围内维护网络资源的公平使用。使用者应确保在有权管理的网络环境中运行，并遵守所在机构的信息技术使用规定。
