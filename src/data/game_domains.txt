@@ -1,0 +1,181 @@
+# NoGameInClass - 游戏域名列表
+# 一个域名一行，支持通配符 *.example.com
+# 欢迎 PR 补充，全国国际生联合维护
+
+# ====== Steam / Valve ======
+steampowered.com
+steamcommunity.com
+steamgames.com
+steamcdn-a.akamaihd.net
+steamstore-a.akamaihd.net
+steamuserimages-a.akamaihd.net
+steamcontent.com
+valvesoftware.com
+csgo.com
+dota2.com
+teamfortress.com
+*.steamserver.net
+*.steamcontent.com
+counter-strike.net
+
+# ====== Epic Games ======
+epicgames.com
+unrealengine.com
+fortnite.com
+fortnitecontent.com
+epicgames.dev
+*.epicgamescdn.com
+*.ecosec.on.epicgames.com
+*.ol.epicgames.com
+
+# ====== Riot Games ======
+riotgames.com
+leagueoflegends.com
+lolstatic-a.akamaihd.net
+lolcdn-a.akamaihd.net
+valorant.com
+playvalorant.com
+val-a.akamaihd.net
+*.pvp.net
+*.riotcdn.net
+
+# ====== Blizzard / Activision ======
+blizzard.com
+battle.net
+worldofwarcraft.com
+overwatch.com
+diablo3.com
+hearthstone.com
+starcraft2.com
+callof duty.com
+activision.com
+*.blizzard.nefficient.co.kr
+*.blz-contentstack.com
+
+# ====== Minecraft / Mojang ======
+minecraft.net
+mojang.com
+mojangserver.net
+minecraftserver.net
+*.minecraftedu.com
+*.minecraftservices.com
+*.mojangcdn.com
+
+# ====== Roblox ======
+roblox.com
+robloxcdn.com
+rbxcdn.com
+*.robloxlabs.com
+
+# ====== Nintendo ======
+nintendo.com
+nintendo.net
+nintendowifi.net
+*.nintendo-europe.com
+
+# ====== PlayStation ======
+playstation.com
+playstation.net
+sonyentertainmentnetwork.com
+*.ac.playstation.net
+*.gst.prod.dl.playstation.net
+
+# ====== Xbox / Microsoft Gaming ======
+xbox.com
+xboxlive.com
+xbl.com
+*.xboxlive.net
+*.xboxservices.com
+*.xbox-master.net
+
+# ====== Discord ======
+discord.com
+discordapp.com
+discord.gg
+*.discord.media
+*.discordapp.net
+
+# ====== Multiplayer Platforms ======
+gog.com
+origin.com
+ea.com
+ea games.com
+ubisoft.com
+ubi.com
+uplay.com
+rockstargames.com
+rockstarnetwork.com
+2k.com
+bethesda.net
+bungie.net
+*.battlelog.co
+*.easyanticheat.net
+*.battleye.com
+
+# ====== Popular Chinese Games ======
+*.huya.com
+*.douyu.com
+bilibili.com
+*.biligame.com
+mihoyo.com
+hoyoverse.com
+genshin.hoyoverse.com
+yuanshen.com
+*.hoyolab.com
+*.starrails.com
+honkaiimpact3.com
+*.mihoyo.com
+tencent.com
+qq.com
+*.game.qq.com
+*.wegame.com
+netease.com
+*.163.com
+*.game.163.com
+
+# ====== Browser Games / .io Games ======
+agar.io
+slither.io
+diep.io
+zombs.io
+krunker.io
+surviv.io
+moomoo.io
+1v1.lol
+shellshock.io
+venge.io
+paper-io.com
+
+# ====== Cloud Gaming ======
+nvidia.com
+geforcenow.com
+xbox.com/cloud-gaming
+stadia.google.com
+*.nvidiafornow.com
+*.nvidia-usercontent.com
+
+# ====== Other ======
+amongus.com
+innerasloth.com
+terraria.org
+rust.facepunch.com
+gmod.facepunch.com
+factorio.com
+rocketleague.com
+warthunder.com
+worldoftanks.com
+worldofwarships.com
+eveonline.com
+escapefromtarkov.com
+destinythegame.com
+rainbow6.com
+tomclancy.com
+fifa.ea.com
+nba2k.com
+maddennfl.com
+fortnitetracker.com
+speedrun.com
+twitch.tv
+twitchcdn.net
+*.jtvnw.net
+*.ttvnw.net

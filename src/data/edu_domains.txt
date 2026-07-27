@@ -1,0 +1,173 @@
+# NoGameInClass - 教育白名单
+# 这些域名的流量永远不受影响
+# 格式: 一个域名一行，支持通配符 *.example.com
+
+# ====== 学习管理系统 ======
+*.googleclassroom.com
+classroom.google.com
+*.canvaslms.com
+*.instructure.com
+*.schoology.com
+*.powerschool.com
+*.blackboard.com
+*.moodle.com
+*.moodlecloud.com
+edmodo.com
+*.edmodo.com
+
+# ====== Google 教育全家桶 ======
+*.google.com
+*.googleapis.com
+*.googleusercontent.com
+*.googleapps.com
+*.gstatic.com
+*.google.cn
+*.googleapis.cn
+*.googlevideo.com
+*.youtube.com
+*.ytimg.com
+*.google-drive.com
+drive.google.com
+docs.google.com
+sheets.google.com
+slides.google.com
+mail.google.com
+meet.google.com
+*.googleeducation.com
+
+# ====== Microsoft 教育 ======
+*.microsoft.com
+*.office.com
+*.office365.com
+*.sharepoint.com
+*.teams.com
+*.live.com
+*.microsoftonline.com
+*.onenote.com
+*.onenote.net
+*.outlook.com
+*.azure.com
+*.azure.net
+*.microsoftedu.com
+flipgrid.com
+
+# ====== Apple 教育 ======
+*.apple.com
+*.icloud.com
+*.schoolwork.apple.com
+*.itunes.apple.com
+
+# ====== 开发 / GitHub ======
+*.github.com
+*.github.io
+*.githubassets.com
+*.githubusercontent.com
+*.gitlab.com
+*.gitlab.io
+*.bitbucket.com
+*.stackoverflow.com
+*.stackexchange.com
+*.stackoverflow.co
+*.python.org
+*.pypi.org
+*.npmjs.com
+*.docker.com
+*.docker.io
+*.readthedocs.io
+*.w3schools.com
+*.mdn.mozilla.org
+*.codecademy.com
+*.codepen.io
+*.replit.com
+
+# ====== 编程学习 ======
+*.leetcode.com
+*.hackerrank.com
+*.codewars.com
+*.exercism.org
+*.khanacademy.org
+*.scratch.mit.edu
+*.code.org
+*.codingbat.com
+*.geeksforgeeks.org
+*.programiz.com
+*.jupyter.org
+
+# ====== 学术 / 研究 ======
+*.scholar.google.com
+*.wikipedia.org
+*.wikimedia.org
+*.wikidata.org
+*.academia.edu
+*.researchgate.net
+*.ieee.org
+*.acm.org
+*.springer.com
+*.sciencedirect.com
+*.jstor.org
+*.pubmed.ncbi.nlm.nih.gov
+*.arxiv.org
+*.coursera.org
+*.edx.org
+*.udemy.com
+*.udacity.com
+*.futurelearn.com
+
+# ====== 国内学习平台 ======
+*.xuexi.cn
+*.xuexi.com
+*.icourse163.org
+*.mooc.edu.cn
+*.chinesemooc.org
+*.edu.cn
+*.cnki.net
+*.cqvip.com
+*.wanfangdata.com.cn
+
+# ====== 办公协作 ======
+*.zoom.us
+*.zoom.com
+*.cloudflare.com
+*.notion.com
+*.notion.so
+*.miro.com
+*.figma.com
+*.canva.com
+*.trello.com
+*.asana.com
+*.jira.com
+*.confluence.com
+*.slack.com
+*.slack-edge.com
+
+# ====== 翻译 / 字典 ======
+*.deepl.com
+*.linguee.com
+*.cambridge.org
+*.oxfordlearnersdictionaries.com
+*.merriam-webster.com
+*.collinsdictionary.com
+*.dictionary.com
+
+# ====== 考试机构 ======
+*.collegeboard.org
+*.ets.org
+*.act.org
+*.ibo.org
+*.cambridgeinternational.org
+*.cie.org.uk
+*.pearson.com
+*.pearsonvue.com
+*.prometric.com
+
+# ====== 通用 ======
+*.cloudfront.net
+*.fastly.net
+*.akamaiedge.net
+*.azureedge.net
+*.netlify.app
+*.vercel.app
+
+# ====== 学校自己的域名（请根据自己的学校修改）=====
+# *.yourschool.edu
+# *.yourschool.cn

@@ -1,0 +1,74 @@
+# NoGameInClass - 游戏常用端口
+# 格式: 协议 端口 游戏/平台
+# 用于端口启发式检测
+
+TCP 27015-27030 Steam 游戏服务器
+TCP 27036-27038 Steam 下载/好友
+UDP 27000-27031 Steam 游戏通信
+UDP 27036 Steam 语音
+UDP 4380 Steam P2P
+
+UDP 3074 Xbox Live / PlayStation
+TCP 3074 Xbox Live
+UDP 3478-3479 PlayStation Network
+TCP 3478-3479 PlayStation Network
+TCP 1935 PlayStation Remote Play / Twitch
+
+TCP 25565 Minecraft Java 版
+TCP 19132-19133 Minecraft Bedrock
+
+UDP 7000-8000 Roblox（动态范围）
+
+UDP 5000-65535 Discord 语音（动态）
+UDP 1194 Discord 语音备用
+
+UDP 6112-6119 Battle.net / Blizzard
+TCP 1119 Battle.net
+TCP 1120 Battle.net
+
+TCP 5222-5223 Riot Games（League, Valorant）
+TCP 2099 Riot Games
+UDP 5000-5500 Riot Games 语音
+
+# TCP 443/80 是万用端口，不用来做游戏判定（靠 SNI/DNS 更准）
+# TCP 443 Epic Games（HTTPS API）
+# TCP 80 Epic Games（HTTP CDN）
+UDP 9000-9999 Epic Games
+
+UDP 3658 Among Us
+UDP 22000-23000 Among Us 匹配
+
+TCP 7777-7787 Terraria 服务器
+TCP 7777 7 Days to Die
+UDP 7777 ARK: Survival Evolved
+UDP 27015-27020 CS:GO / TF2 社区服务器
+UDP 3478 Fortnite 语音
+UDP 5060-5062 Fortnite
+UDP 16000-17000 Fortnite
+
+TCP 9988 GTA Online
+UDP 6672 GTA Online
+UDP 61455-61458 GTA Online
+
+UDP 48010 Rocket League
+
+UDP 22000-26000 Roblox 游戏服务器
+
+TCP 29900-29901 Nintendo Switch
+UDP 29900-29901 Nintendo Switch
+UDP 1-65535 Nintendo Switch（P2P 全端口）
+
+TCP 9000-9015 Ubisoft Connect
+UDP 9000-9015 Ubisoft Connect
+TCP 13000-13020 Ubisoft
+UDP 13000-13020 Ubisoft
+
+UDP 88 Kerberos（Windows 游戏认证）
+
+TCP 5228-5230 Google Cloud Gaming
+UDP 5230 Stadia
+
+UDP 27000-27011 求生之路 / Valve 游戏
+UDP 3478-3480 堡垒之夜 / Rocket League
+UDP 31000-33000 堡垒之夜
+UDP 49000-50500 堡垒之夜

@@ -1,0 +1,13 @@
+{
+    "_说明": "NoGameInClass 配置文件 — 改之前看清楚，别把自己制裁了",
+    "ics_subnet": "192.168.137.0/24",
+    "throttle_bandwidth_kbps": 50,
+    "throttle_duration_min": 2,
+    "throttle_duration_max": 3,
+    "disconnect_duration_min": 1,
+    "disconnect_duration_max": 2,
+    "clean_timeout_seconds": 30,
+    "log_file": "nogameinclass.log",
+    "learning_mode": false,
+    "show_notifications": true
+}
