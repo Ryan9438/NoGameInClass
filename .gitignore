@@ -8,3 +8,4 @@ build/
 *.log
 config.local.json
 .DS_Store
+probe/

@@ -6,6 +6,8 @@ import sys
 import threading
 from ipaddress import ip_network
 
+from src.utils.netinfo import list_local_ipv4, find_matching_ips
+
 
 # 尝试导入 PyDivert，如果导入失败则在屏幕上提示
 try:
@@ -43,6 +45,18 @@ class Capturer:
         """
         self.callback = callback
         self.running = True
+
+        # 网卡自检：确认热点网段，避免过滤器写错导致抓不到流量
+        subnet_str = self.config.get("ics_subnet", "192.168.137.0/24")
+        local_ips = list_local_ipv4()
+        matched = find_matching_ips(subnet_str)
+        print(f"[*] 本机 IPv4 地址: {', '.join(local_ips) if local_ips else '（未检测到）'}")
+        if matched:
+            print(f"[✓] 热点网段匹配成功: {', '.join(matched)} ∈ {subnet_str}")
+        else:
+            print(f"[!] 警告: 配置网段 {subnet_str} 与本机任何地址都不匹配")
+            print("[!] 若抓不到流量，请把 config.json 里的 ics_subnet 改成热点实际网段")
+        print()
 
         if not HAS_PYDIVERT:
             print("[!] 没找到 PyDivert！在 Windows 上先装: pip install pydivert")

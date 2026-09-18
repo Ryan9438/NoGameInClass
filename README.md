@@ -42,6 +42,16 @@ python src/main.py
 
 需要以管理员身份运行（WinDivert 驱动需要管理员权限）。也可双击 `启动.bat`。
 
+### Windows 免安装便携版（目标机没有 Python 时用这个）
+
+在开发机上运行：
+
+```bash
+python3 tools/build_portable.py
+```
+
+生成 `dist/NoGameInClass-portable/`（含嵌入式 Python 运行时），整个文件夹拷到 U 盘，目标机右键 `启动.bat` → 以管理员身份运行即可，**目标机无需安装 Python 或任何依赖**。
+
 ### macOS / Linux（逻辑验证）
 
 ```bash
@@ -67,6 +77,7 @@ NoGameInClass/
 │   │   └── whitelist.py     # 域名白/黑名单管理
 │   ├── utils/
 │   │   ├── dns_monitor.py   # DNS 查询解析
+│   │   ├── netinfo.py       # 网卡自检（定位热点网段）
 │   │   └── tls_sni.py       # TLS SNI 提取
 │   ├── ui/
 │   │   └── console.py       # 状态监控面板
@@ -76,6 +87,8 @@ NoGameInClass/
 │   │   ├── game_ports.txt          # 游戏端口列表
 │   │   └── edu_domains.txt         # 教育域名白名单
 │   └── test_sim.py          # 模拟测试
+├── tools/
+│   └── build_portable.py    # 便携包构建脚本
 ├── config.json              # 运行时配置
 ├── 启动.bat                 # Windows 启动脚本
 └── build_exe.bat            # exe 打包脚本
