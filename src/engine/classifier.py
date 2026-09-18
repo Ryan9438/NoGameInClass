@@ -11,16 +11,24 @@ from src.engine.whitelist import Whitelist
 class Classification:
     def __init__(self, is_game=False, reason="", domain=""):
         self.is_game = is_game          # 布尔值：是不是游戏流量
+        self.is_distraction = False     # 布尔值：是不是干扰流量（短视频 / 娱乐）
         self.reason = reason            # 字符串：判断依据
         self.domain = domain            # 字符串：涉及的域名
         self.is_edu = False             # 布尔值：是不是教育流量
 
+    @property
+    def is_restricted(self):
+        """需要被调控的流量：游戏 + 干扰"""
+        return self.is_game or self.is_distraction
+
     def __bool__(self):
-        return self.is_game
+        return self.is_restricted
 
     def __repr__(self):
         if self.is_edu:
             return f"<Classification EDU: {self.reason}>"
+        if self.is_distraction:
+            return f"<Classification DISTRACTION: {self.reason}>"
         if self.is_game:
             return f"<Classification GAME: {self.reason}>"
         return "<Classification CLEAN>"
@@ -94,6 +102,11 @@ class Classifier:
                 result.reason = f"DNS 查询到游戏域名: {domain}"
                 result.domain = domain
                 return result
+            elif self.wl.is_distraction_domain(domain):
+                result.is_distraction = True
+                result.reason = f"DNS 查询到干扰域名: {domain}"
+                result.domain = domain
+                return result
             else:
                 # 未知域名，记录下来备用
                 result.reason = f"未知域名: {domain}"
@@ -119,6 +132,11 @@ class Classifier:
                     result.reason = f"SNI 游戏域名: {sni}"
                     result.domain = sni
                     return result
+                elif self.wl.is_distraction_domain(sni):
+                    result.is_distraction = True
+                    result.reason = f"SNI 干扰域名: {sni}"
+                    result.domain = sni
+                    return result
 
         # ====== 第 3 层：端口启发式检测 ======
         # 跳过标准 Web 端口（80/443），这些靠 SNI 更准
@@ -142,6 +160,10 @@ class Classifier:
         elif self.wl.is_game_ip(dst_ip):
             result.is_game = True
             result.reason = f"IP 缓存游戏: {dst_ip}"
+            return result
+        elif self.wl.is_distraction_ip(dst_ip):
+            result.is_distraction = True
+            result.reason = f"IP 缓存干扰: {dst_ip}"
             return result
 
         # ====== 第 5 层：流缓存检测 ======

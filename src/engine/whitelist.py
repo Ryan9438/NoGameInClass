@@ -37,14 +37,17 @@ class Whitelist:
         self.edu_domains = _load_domains(f"{data_dir}/edu_domains.txt")
         # 游戏域名黑名单
         self.game_domains = _load_domains(f"{data_dir}/game_domains.txt")
+        # 干扰流量域名黑名单（短视频 / 娱乐平台）
+        self.distraction_domains = _load_domains(f"{data_dir}/distraction_domains.txt")
         # 游戏端口
         self.game_ports = self._load_ports(f"{data_dir}/game_ports.txt")
 
-        # DNS 解析缓存: domain -> [ip1, ip2, ...]
+        # DNS 解析缓存: domain/ip -> 关联值
         self.dns_cache = {}
 
         print(f"[+] 加载了 {len(self.edu_domains)} 个教育域名（白名单）")
         print(f"[+] 加载了 {len(self.game_domains)} 个游戏域名（黑名单）")
+        print(f"[+] 加载了 {len(self.distraction_domains)} 个干扰域名（短视频 / 娱乐）")
         print(f"[+] 加载了 {len(self.game_ports)} 个游戏端口")
 
     def _load_ports(self, filepath):
@@ -114,6 +117,18 @@ class Whitelist:
                 return True
         return False
 
+    def is_distraction_domain(self, domain):
+        """检查域名是否在干扰流量黑名单中（短视频 / 娱乐平台）"""
+        if not domain:
+            return False
+        domain = domain.lower()
+        for pattern in self.distraction_domains:
+            if fnmatch.fnmatch(domain, pattern):
+                return True
+            if pattern.startswith('*.') and domain.endswith(pattern[1:]):
+                return True
+        return False
+
     def is_game_port(self, protocol, port):
         """检查端口是否在游戏端口列表中"""
         ports = self.game_ports.get(protocol, set())
@@ -143,4 +158,11 @@ class Whitelist:
         domain = self.dns_cache.get(ip)
         if domain:
             return self.is_game_domain(domain)
+        return False
+
+    def is_distraction_ip(self, ip):
+        """检查 IP 是否属于已知的干扰流量域名"""
+        domain = self.dns_cache.get(ip)
+        if domain:
+            return self.is_distraction_domain(domain)
         return False

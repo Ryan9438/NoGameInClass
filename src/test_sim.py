@@ -165,6 +165,15 @@ def run_simulation(whitelist, classifier, penalizer, config, callback):
         ("Edu SNI: GitHub", lambda ip: build_tls_sni_packet(ip, '140.82.121.3', 'github.com')),
     ]
 
+    distraction_scenarios = [
+        ("DNS: 抖音 douyin.com", lambda ip: build_dns_query(ip, 'douyin.com')),
+        ("DNS: 快手 kuaishou.com", lambda ip: build_dns_query(ip, 'kuaishou.com')),
+        ("DNS: 小红书 xiaohongshu.com", lambda ip: build_dns_query(ip, 'xiaohongshu.com')),
+        ("DNS: 视频号 channels.weixin.qq.com", lambda ip: build_dns_query(ip, 'channels.weixin.qq.com')),
+        ("SNI: 抖音", lambda ip: build_tls_sni_packet(ip, '1.2.3.6', 'douyin.com')),
+        ("SNI: 小红书", lambda ip: build_tls_sni_packet(ip, '1.2.3.7', 'xiaohongshu.com')),
+    ]
+
     print("场景 1: 游戏狗开始作妖")
     print("-" * 40)
 
@@ -189,7 +198,19 @@ def run_simulation(whitelist, classifier, penalizer, config, callback):
             time.sleep(0.05)
 
     print()
-    print("场景 3: 游戏狗持续输出（观察状态切换）")
+    print("场景 3: 短视频狗（直接全封，不给活路）")
+    print("-" * 40)
+
+    for user in normal_users:
+        for desc, maker in distraction_scenarios:
+            packet = maker(user)
+            cb_result = callback(packet)
+            status = "🚫 BLOCK" if cb_result == "DROP" else f"⚠️  {cb_result}"
+            print(f"  [{status}] {user:16} → {desc:<30}")
+            time.sleep(0.05)
+
+    print()
+    print("场景 4: 游戏狗持续输出（观察状态切换）")
     print("-" * 40)
 
     heavy_gamer = gamers[0]
@@ -210,7 +231,9 @@ def run_simulation(whitelist, classifier, penalizer, config, callback):
 
     print()
     print("模拟结束！")
-    print(f"制裁统计: {penalizer.get_summary()['total_drops']} 次丢包, "
-          f"{penalizer.get_summary()['total_throttles']} 次限速, "
-          f"{penalizer.get_summary()['total_disconnects']} 次断网")
+    s = penalizer.get_summary()
+    print(f"制裁统计: {s['total_drops']} 次丢包, "
+          f"{s['total_throttles']} 次限速, "
+          f"{s['total_disconnects']} 次断网, "
+          f"{s['total_distraction_blocks']} 次短视频封杀")
     print()

@@ -49,10 +49,10 @@ def print_banner():
     ║                                                  ║
     ╚══════════════════════════════════════════════════╝
 
-[INFO] 使命: 让每一个在热点上打游戏的人痛不欲生
-[INFO] 原则: 不影响正常学习的学生，只制裁游戏狗
-[INFO] 策略: 限速 50Kbps + 每2-3分钟断网1分钟+
-[INFO] 正义: 网络资源属于学习的人，不属于打游戏的人
+[INFO] 使命: 让每一个在热点上打游戏刷视频的人痛不欲生
+[INFO] 原则: 不影响正常学习的学生，只制裁摸鱼的人
+[INFO] 策略: 游戏限速50Kbps+周期性断网 | 短视频直接封杀
+[INFO] 正义: 网络资源属于学习的人，不属于摸鱼的人
 
 """
     print(banner)
@@ -125,6 +125,7 @@ def run_production(config):
         print(f"     丢包: {stats['total_drops']} 次")
         print(f"     限速: {stats['total_throttles']} 次")
         print(f"     断网: {stats['total_disconnects']} 次")
+        print(f"     短视频封杀: {stats['total_distraction_blocks']} 次")
         print(f"     制裁客户端: {stats['active_penalties']} 个")
 
 
@@ -160,6 +161,7 @@ def run_test(config):
     print(f"     总丢包: {stats['total_drops']}")
     print(f"     总限速: {stats['total_throttles']}")
     print(f"     总断网: {stats['total_disconnects']}")
+    print(f"     短视频封杀: {stats['total_distraction_blocks']}")
     print(f"     最大同时制裁: {stats['active_penalties']}")
     print(f"\n{'=' * 50}")
     print(f"  测试结论: 制裁引擎工作正常 ✅")

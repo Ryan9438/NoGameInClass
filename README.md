@@ -1,10 +1,10 @@
 # NoGameInClass
 
-校园网络公平使用工具。在设备热点上自动识别并限制游戏流量，保障正常学习用网。
+校园网络公平使用工具。在设备热点上自动识别并限制游戏与娱乐流量，保障正常学习用网。
 
 ## 背景
 
-国际学校常见场景：教室通过希沃白板开启 Wi-Fi 热点共享网络，设备连接上限 8 台。当部分设备占用带宽进行游戏时，其余设备正常学习（查资料、提交作业、GitHub push 等）会受到严重影响。
+国际学校常见场景：教室通过希沃白板开启 Wi-Fi 热点共享网络，设备连接上限 8 台。当部分设备占用带宽进行游戏或刷短视频时，其余设备正常学习（查资料、提交作业、GitHub push 等）会受到严重影响。
 
 本项目旨在通过流量识别与调控，恢复网络资源的公平分配。
 
@@ -16,16 +16,20 @@
 
 | 检测层 | 方法 | 覆盖范围 |
 |--------|------|----------|
-| DNS 分析 | 拦截 DNS 查询，匹配游戏域名库 | 148+ 游戏域名 |
+| DNS 分析 | 拦截 DNS 查询，匹配域名库 | 148+ 游戏域名 / 75+ 娱乐域名 |
 | TLS SNI | 从 HTTPS 握手中提取目标域名 | 加密流量同样可识别 |
 | 端口分析 | 匹配已知游戏服务端口 | Minecraft(25565), Xbox(3074), Steam(27000-27036) 等 |
 | IP 缓存 | 通过 DNS 响应自动关联 IP→域名 | 动态 CDN IP 也可追踪 |
 
 ### 调控策略
 
-1. **带宽限制**：对识别为游戏的流量实施限速（默认 50Kbps），使其无法正常游戏
-2. **周期性连接调控**：每 2-3 分钟对游戏连接进行间歇性调控，持续 1 分钟以上
-3. **白名单保护**：Google Classroom、Canvas、GitHub、Zoom 等教育/学习平台流量完全不受影响
+按流量类别区分处理：
+
+| 类别 | 示例 | 策略 |
+|------|------|------|
+| 游戏 | Steam、原神、Minecraft、Discord | 带宽限制 + 周期性连接调控 |
+| 娱乐 | 抖音、快手、小红书、微信视频号 | 直接封禁（可配置为与游戏相同） |
+| 学习 | Google Classroom、Canvas、GitHub、Zoom | 完全放行 |
 
 ## 快速开始
 
@@ -67,9 +71,10 @@ NoGameInClass/
 │   ├── ui/
 │   │   └── console.py       # 状态监控面板
 │   ├── data/
-│   │   ├── game_domains.txt # 游戏域名列表
-│   │   ├── game_ports.txt   # 游戏端口列表
-│   │   └── edu_domains.txt  # 教育域名白名单
+│   │   ├── game_domains.txt        # 游戏域名列表
+│   │   ├── distraction_domains.txt # 娱乐域名列表（短视频 / 直播）
+│   │   ├── game_ports.txt          # 游戏端口列表
+│   │   └── edu_domains.txt         # 教育域名白名单
 │   └── test_sim.py          # 模拟测试
 ├── config.json              # 运行时配置
 ├── 启动.bat                 # Windows 启动脚本
@@ -83,6 +88,9 @@ NoGameInClass/
 ```json
 {
     "ics_subnet": "192.168.137.0/24",
+    "restrict_games": true,
+    "restrict_distractions": true,
+    "block_distractions": true,
     "throttle_bandwidth_kbps": 50,
     "throttle_duration_min": 2,
     "throttle_duration_max": 3,
@@ -91,9 +99,18 @@ NoGameInClass/
 }
 ```
 
+| 配置项 | 说明 |
+|--------|------|
+| `restrict_games` | 是否调控游戏流量 |
+| `restrict_distractions` | 是否限制娱乐流量 |
+| `block_distractions` | 娱乐流量：`true` 直接封禁，`false` 走与游戏相同的限速流程 |
+| `throttle_bandwidth_kbps` | 限速带宽 |
+| `throttle_duration_*` | 限速阶段时长（分钟，随机区间） |
+| `disconnect_duration_*` | 断网阶段时长（分钟，随机区间） |
+
 ## 贡献
 
-如果发现未覆盖的游戏域名，欢迎提交 Issue 或 PR。项目域名列表采用社区维护方式，共同完善识别覆盖。
+如果发现未覆盖的游戏或娱乐域名，欢迎提交 Issue 或 PR。项目域名列表采用社区维护方式，共同完善识别覆盖。
 
 ## 免责声明
 

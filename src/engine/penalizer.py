@@ -1,12 +1,15 @@
 """
 惩罚引擎 —— 整个项目最爽的部分
-对每个游戏客户端维持一个状态机:
+对每个被限制的客户端维持一个状态机:
   CLEAN → THROTTLED → DISCONNECTED → CLEAN (循环)
 并配合令牌桶限速，让游戏狗体验什么叫绝望
+
+干扰流量（短视频 / 娱乐平台）走另一条路：默认直接全封，不留活口。
 """
 import time
 import random
 import threading
+from typing import Any
 
 
 class ClientState:
@@ -23,6 +26,11 @@ class Penalizer:
         # 每个客户端的状态
         self.clients = {}  # {client_ip: state_dict}
 
+        # 开关
+        self.restrict_games = config.get("restrict_games", True)
+        self.restrict_distractions = config.get("restrict_distractions", True)
+        self.block_distractions = config.get("block_distractions", True)
+
         # 参数
         self.throttle_bw = config.get("throttle_bandwidth_kbps", 50) * 1024 / 8  # bytes/s
         self.throttle_min = config.get("throttle_duration_min", 2) * 60
@@ -32,10 +40,11 @@ class Penalizer:
         self.clean_timeout = config.get("clean_timeout_seconds", 30)
 
         # 统计信息
-        self.stats = {
+        self.stats: dict[str, Any] = {
             "total_drops": 0,
             "total_throttles": 0,
             "total_disconnects": 0,
+            "total_distraction_blocks": 0,
             "active_penalties": 0,
         }
 
@@ -45,11 +54,11 @@ class Penalizer:
         if client_ip not in self.clients:
             self.clients[client_ip] = {
                 "state": ClientState.CLEAN,
-                "last_game_time": 0,       # 最后一次检测到游戏流量的时间
-                "state_start_time": now,   # 当前状态开始的时间
+                "last_restricted_time": 0,  # 最后一次检测到受限流量的时间
+                "state_start_time": now,    # 当前状态开始的时间
                 "tokens": 0,                # 令牌桶当前令牌数
-                "last_token_update": now,  # 上次更新令牌的时间
-                "game_reason": "",          # 被制裁的原因
+                "last_token_update": now,   # 上次更新令牌的时间
+                "penalty_reason": "",       # 被制裁的原因
                 "penalty_count": 0,         # 被制裁次数
             }
         return self.clients[client_ip]
@@ -63,6 +72,14 @@ class Penalizer:
         client["tokens"] = min(client["tokens"] + elapsed * self.throttle_bw, max_burst)
         client["last_token_update"] = now
 
+    def _is_restricted(self, classification):
+        """该流量是否需要被调控"""
+        if classification.is_game and self.restrict_games:
+            return True
+        if classification.is_distraction and self.restrict_distractions:
+            return True
+        return False
+
     def process(self, packet, classification):
         """处理一个数据包，返回 Action
         Returns: "FORWARD" | "DROP" | "THROTTLE"
@@ -74,34 +91,42 @@ class Penalizer:
         client_ip = ip.src_addr
 
         with self.lock:
-            client = self._get_state(client_ip)
-            now = time.time()
-
-            # 如果是教育流量，永远放行
+            # 教育流量永远放行
             if classification.is_edu:
                 return "FORWARD"
 
-            is_game = classification.is_game
-            is_game_packet = is_game  # 这个包本身是不是游戏包
+            # 干扰流量（短视频 / 娱乐）：默认直接封死，不进入状态机
+            if classification.is_distraction and self.restrict_distractions and self.block_distractions:
+                self.stats["total_drops"] += 1
+                self.stats["total_distraction_blocks"] += 1
+                client = self._get_state(client_ip)
+                client["penalty_reason"] = classification.reason
+                return "DROP"
 
-            if is_game:
-                client["last_game_time"] = now
-                client["game_reason"] = classification.reason
+            client = self._get_state(client_ip)
+            now = time.time()
+
+            is_restricted = self._is_restricted(classification)
+
+            if is_restricted:
+                client["last_restricted_time"] = now
+                client["penalty_reason"] = classification.reason
 
             # ====== 状态机 ======
-            if client["state"] == ClientState.CLEAN:
-                if is_game:
+            state = client["state"]
+
+            if state == ClientState.CLEAN:
+                if is_restricted:
                     # 抓到了！直接进入限速模式
                     client["state"] = ClientState.THROTTLED
                     client["state_start_time"] = now
                     client["penalty_count"] += 1
                     self.stats["active_penalties"] += 1
-                    # 第一个游戏包，丢！
                     self.stats["total_drops"] += 1
                     return "THROTTLE"
                 return "FORWARD"
 
-            elif client["state"] == ClientState.THROTTLED:
+            elif state == ClientState.THROTTLED:
                 elapsed = now - client["state_start_time"]
                 throttle_duration = random.uniform(self.throttle_min, self.throttle_max)
 
@@ -110,22 +135,21 @@ class Penalizer:
                     client["state"] = ClientState.DISCONNECTED
                     client["state_start_time"] = now
                     self.stats["total_disconnects"] += 1
-                    if is_game_packet:
+                    if is_restricted:
                         self.stats["total_drops"] += 1
                         return "DROP"
                     return "FORWARD"
 
-                # 如果很久没检测到游戏流量了，放他一马
-                if now - client["last_game_time"] > self.clean_timeout:
+                # 如果很久没检测到受限流量了，放他一马
+                if now - client["last_restricted_time"] > self.clean_timeout:
                     client["state"] = ClientState.CLEAN
                     self.stats["active_penalties"] -= 1
                     return "FORWARD"
 
                 # 限速：令牌桶算法
-                packet_size = self._packet_size(packet)
-                self._update_tokens(client)
-
-                if is_game_packet:
+                if is_restricted:
+                    packet_size = self._packet_size(packet)
+                    self._update_tokens(client)
                     if client["tokens"] >= packet_size:
                         client["tokens"] -= packet_size
                         self.stats["total_throttles"] += 1
@@ -134,10 +158,10 @@ class Penalizer:
                         self.stats["total_drops"] += 1
                         return "DROP"  # 没令牌了，丢包
                 else:
-                    # 非游戏包，即使在限速状态也放行
+                    # 非受限包，即使在限速状态也放行
                     return "FORWARD"
 
-            elif client["state"] == ClientState.DISCONNECTED:
+            elif state == ClientState.DISCONNECTED:
                 elapsed = now - client["state_start_time"]
                 disconnect_duration = random.uniform(self.disconnect_min, self.disconnect_max)
 
@@ -147,11 +171,11 @@ class Penalizer:
                     self.stats["active_penalties"] -= 1
                     return "FORWARD"
 
-                if is_game_packet:
+                if is_restricted:
                     self.stats["total_drops"] += 1
-                    return "DROP"  # 游戏包，不给过
+                    return "DROP"  # 受限流量，不给过
                 else:
-                    return "FORWARD"  # 非游戏包，正常放行
+                    return "FORWARD"  # 其他流量正常放行
 
             return "FORWARD"
 
@@ -169,7 +193,7 @@ class Penalizer:
             expired = []
             for ip, client in self.clients.items():
                 if client["state"] == ClientState.CLEAN and \
-                   now - client["last_game_time"] > 300:
+                   now - client["last_restricted_time"] > 300:
                     expired.append(ip)
             for ip in expired:
                 del self.clients[ip]
@@ -184,7 +208,7 @@ class Penalizer:
                 if client["state"] != ClientState.CLEAN:
                     stats["clients"][ip] = {
                         "state": client["state"],
-                        "reason": client["game_reason"],
+                        "reason": client["penalty_reason"],
                         "penalty_count": client["penalty_count"],
                         "elapsed": int(time.time() - client["state_start_time"]),
                     }

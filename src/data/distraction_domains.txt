@@ -1,0 +1,92 @@
+# NoGameInClass - 干扰流量域名列表
+# 短视频 / 娱乐平台。比游戏更直接：默认全封。
+# 一个域名一行，支持通配符 *.example.com
+# 欢迎 PR 补充
+
+# ====== 抖音 / 字节跳动系 ======
+douyin.com
+*.douyin.com
+douyincdn.com
+*.douyincdn.com
+douyinpic.com
+*.douyinpic.com
+douyinstatic.com
+*.douyinstatic.com
+douyinvod.com
+*.douyinvod.com
+douyinwm.com
+amemv.com
+*.amemv.com
+snssdk.com
+*.snssdk.com
+pstatp.com
+*.pstatp.com
+byteimg.com
+*.byteimg.com
+bytedance.com
+*.bytedance.com
+bytedance.net
+bytecdn.cn
+bytednsdoc.com
+ibytedtos.com
+ixigua.com
+*.ixigua.com
+huoshan.com
+*.huoshan.com
+toutiao.com
+*.toutiao.com
+toutiaoimg.com
+toutiaoimg.cn
+
+# ====== 快手 ======
+kuaishou.com
+*.kuaishou.com
+kuaishouapp.com
+*.kuaishouapp.com
+kwaishop.com
+*.kwaishop.com
+kwai.com
+*.kwai.com
+kwaiprotocol.com
+*.kwaiprotocol.com
+gifshow.com
+*.gifshow.com
+yximgs.com
+*.yximgs.com
+kspkg.com
+*.kspkg.com
+kuaishouzt.com
+*.kuaishouzt.com
+
+# ====== 小红书 ======
+xiaohongshu.com
+*.xiaohongshu.com
+xhscdn.com
+*.xhscdn.com
+xhslink.com
+*.xhslink.com
+xhs.cn
+*.xhs.cn
+xiaohongshu.net
+
+# ====== 微信视频号 ======
+# 注意：视频号与微信本体共用基础设施，域名层面无法完全隔离。
+# 以下为视频号专用/强相关域名，屏蔽后可能影响微信部分视频功能，
+# 但不影响微信文字聊天与语音通话。
+finder.video.qq.com
+channels.weixin.qq.com
+video.weixin.qq.com
+video.qq.com
+*.video.qq.com
+
+# ====== 其他常见短视频 / 直播 ======
+huya.com
+*.huya.com
+douyu.com
+*.douyu.com
+yy.com
+*.yy.com
+inke.tv
+*.inke.tv
+zhanqi.tv
+*.zhanqi.tv

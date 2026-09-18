@@ -58,6 +58,7 @@ class ConsoleUI:
         out.append(f"  丢包数:           \033[1;31m{stats['total_drops']}\033[0m\n")
         out.append(f"  限速次数:         \033[1;33m{stats['total_throttles']}\033[0m\n")
         out.append(f"  断网次数:         \033[1;31m{stats['total_disconnects']}\033[0m\n")
+        out.append(f"  短视频封杀:       \033[1;31m{stats['total_distraction_blocks']}\033[0m\n")
         out.append(f"  正在被制裁的客户端: \033[1;31m{stats['active_penalties']}\033[0m 个\n")
         out.append(f"  跟踪的客户端数:   {stats['clients_tracked']} 个\n")
 
