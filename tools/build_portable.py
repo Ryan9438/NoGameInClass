@@ -20,15 +20,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "build" / "cache"
-SEED_DIR = ROOT / "probe" / "wheels"          # 之前探测包下载好的资产，可复用
+SEED_DIR = ROOT / "probe" / "wheels"
 DIST = ROOT / "dist"
 OUT = DIST / "NoGameInClass-portable"
 
 PY_VERSION = "3.12.10"
 PY_EMBED_NAME = f"python-{PY_VERSION}-embed-amd64.zip"
-PY_EMBED_URL = (
-    f"https://www.python.org/ftp/python/{PY_VERSION}/{PY_EMBED_NAME}"
-)
+PY_EMBED_URL = f"https://www.python.org/ftp/python/{PY_VERSION}/{PY_EMBED_NAME}"
 PYDIVERT_VERSION = "3.1.3"
 PYDIVERT_WHEEL = f"pydivert-{PYDIVERT_VERSION}-py3-none-any.whl"
 PYPI_MIRRORS = [
@@ -42,6 +40,13 @@ def log(msg):
     print(f"[*] {msg}", flush=True)
 
 
+def write_crlf(path: Path, text: str):
+    """批处理文件必须用 CRLF 行尾，否则 Windows cmd 可能解析异常。"""
+    path.write_bytes(
+        text.replace("\r\n", "\n").replace("\n", "\r\n").encode("utf-8")
+    )
+
+
 def download(url, dest: Path):
     dest.parent.mkdir(parents=True, exist_ok=True)
     log(f"下载 {url}")
@@ -49,7 +54,6 @@ def download(url, dest: Path):
 
 
 def _from_cache_or_seed(name: str) -> Path | None:
-    """先看 build/cache，再看探测包留下的 probe/wheels。"""
     for base in (CACHE, SEED_DIR):
         p = base / name
         if p.exists():
@@ -76,11 +80,9 @@ def fetch_pydivert() -> Path:
         try:
             log(f"尝试从 {index} 下载 pydivert")
             subprocess.run(
-                [
-                    sys.executable, "-m", "pip", "download",
-                    f"pydivert=={PYDIVERT_VERSION}", "--no-deps",
-                    "-d", str(CACHE), "-i", index,
-                ],
+                [sys.executable, "-m", "pip", "download",
+                 f"pydivert=={PYDIVERT_VERSION}", "--no-deps",
+                 "-d", str(CACHE), "-i", index],
                 check=True,
             )
             wheel = CACHE / PYDIVERT_WHEEL
@@ -104,47 +106,93 @@ def copytree_clean(src: Path, dest: Path):
     )
 
 
-# ----------------------------- 启动器 -----------------------------
+# ============================================================
+#  启动器模板（全部纯 ASCII，避免 cmd 代码页解析问题）
+#
+#  提权检测要点：
+#   1) 用 High Mandatory Level 的 SID 判断，不依赖 LanmanServer 服务
+#   2) find.exe 用全路径，避免被 PATH 里的 Unix find（如 Git 自带）劫持
+#   3) 提权时传 "elevated" 参数，并在开头 goto 跳过检测，防止无限提权循环
+# ============================================================
 
-LAUNCHER = r"""@echo off
-chcp 65001 >nul
-title NoGameInClass - 校园网络公平使用工具
+ELEVATE = r"""if /i "%~1"=="elevated" goto :ngic_run
 
-REM 检查管理员权限（WinDivert 驱动必须管理员才能加载）
-net session >nul 2>&1
-if %errorlevel% neq 0 (
-    echo 正在申请管理员权限...
-    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+whoami /groups | "%SystemRoot%\System32\find.exe" "S-1-16-12288" >nul 2>&1
+if errorlevel 1 (
+    echo Requesting administrator privileges...
+    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -ArgumentList 'elevated' -Verb RunAs"
     exit /b
 )
 
+:ngic_run
+"""
+
+LAUNCHER = r"""@echo off
+setlocal
+cd /d "%~dp0"
+
+""" + ELEVATE + r"""
 echo.
-echo 已获得管理员权限，启动 NoGameInClass...
-echo 按 Ctrl+C 可随时停止。
+echo Starting NoGameInClass...
+echo Press Ctrl+C to stop.
 echo.
 
 "%~dp0python\python.exe" "%~dp0src\main.py"
+set EXITCODE=%errorlevel%
 
 echo.
-echo 程序已退出。
+echo Program exited with code %EXITCODE%.
+echo If it failed or flashed, run selftest.bat first.
+echo.
+pause
+"""
+
+SELFTEST = r"""@echo off
+setlocal
+cd /d "%~dp0"
+
+echo ============================================
+echo   NoGameInClass SELFTEST  (no admin needed)
+echo ============================================
+echo.
+
+"%~dp0python\python.exe" -u "%~dp0src\main.py" --test
+echo.
+echo exit code: %errorlevel%
+echo.
+pause
+"""
+
+DEBUG = r"""@echo off
+setlocal
+cd /d "%~dp0"
+
+""" + ELEVATE + r"""
+echo Running with full logging -^> console.log
+echo (press Ctrl+C to stop the app)
+echo.
+
+"%~dp0python\python.exe" -u "%~dp0src\main.py" > "%~dp0console.log" 2>&1
+
+echo.
+echo ============ console.log ============
+type "%~dp0console.log"
+echo =====================================
+echo.
 pause
 """
 
 DIAG = r"""@echo off
-chcp 65001 >nul
-title NoGameInClass - 诊断
+setlocal
+cd /d "%~dp0"
 
-net session >nul 2>&1
-if %errorlevel% neq 0 (
-    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
-    exit /b
-)
-
-"%~dp0python\python.exe" "%~dp0probe.py"
+""" + ELEVATE + r"""
+"%~dp0python\python.exe" -u "%~dp0probe.py"
+echo.
 pause
 """
 
-README_TXT = f"""NoGameInClass 使用说明
+README_TXT = """NoGameInClass 使用说明
 ================================
 
 这是什么？
@@ -156,6 +204,8 @@ README_TXT = f"""NoGameInClass 使用说明
   2. 看到"制裁面板"就说明跑起来了
   3. 按 Ctrl+C 停止
 
+  如果双击后窗口一闪就没了，先运行 "自检.bat" 看看 Python 层是否正常。
+
 需要什么？
   Windows 7 及以上 64 位。
   不需要安装 Python，所有东西都在这个文件夹里，绿色免安装。
@@ -163,12 +213,14 @@ README_TXT = f"""NoGameInClass 使用说明
 改配置？
   用记事本打开 config.json，改完保存，下次启动生效。
   常用项：
-    restrict_games        是否调控游戏（true/false）
-    restrict_distractions 是否限制短视频（true/false）
-    throttle_bandwidth_kbps 限速多少 Kbps
+    restrict_games           是否调控游戏（true/false）
+    restrict_distractions    是否限制短视频（true/false）
+    throttle_bandwidth_kbps  限速多少 Kbps
 
 出问题了？
-  右键 "诊断.bat" -> 以管理员身份运行，按提示排查。
+  自检.bat    Python 层自检，不需要管理员
+  诊断.bat    WinDivert 驱动自检
+  调试.bat    完整启动并把日志写到 console.log
 
 声明
   本工具用于在你有权管理的网络中维护网络资源的公平使用。
@@ -189,11 +241,9 @@ def build():
     py_dir = OUT / "python"
     extract(embed, py_dir)
 
-    log("写入 python312._pth（指向 site-packages）")
-    (py_dir / "python312._pth").write_text(
-        "python312.zip\n.\nLib\\site-packages\nimport site\n",
-        encoding="utf-8",
-    )
+    log("写入 python312._pth")
+    write_crlf(py_dir / "python312._pth",
+               "python312.zip\n.\nLib\\site-packages\nimport site\n")
 
     log("vendor pydivert 到 site-packages")
     site = py_dir / "Lib" / "site-packages"
@@ -211,14 +261,19 @@ def build():
     copytree_clean(ROOT / "src", OUT / "src")
     shutil.copy2(ROOT / "config.json", OUT / "config.json")
 
-    log("写入启动器 / 说明 / 诊断")
-    (OUT / "启动.bat").write_text(LAUNCHER, encoding="utf-8")
-    (OUT / "start.bat").write_text(LAUNCHER, encoding="utf-8")
-    (OUT / "诊断.bat").write_text(DIAG, encoding="utf-8")
+    log("写入启动器 / 自检 / 调试 / 说明")
+    write_crlf(OUT / "启动.bat", LAUNCHER)
+    write_crlf(OUT / "start.bat", LAUNCHER)
+    write_crlf(OUT / "自检.bat", SELFTEST)
+    write_crlf(OUT / "selftest.bat", SELFTEST)
+    write_crlf(OUT / "调试.bat", DEBUG)
+    write_crlf(OUT / "debug.bat", DEBUG)
+    write_crlf(OUT / "诊断.bat", DIAG)
+    write_crlf(OUT / "diagnose.bat", DIAG)
     (OUT / "probe.py").write_text(
         (ROOT / "probe" / "probe.py").read_text(encoding="utf-8"), encoding="utf-8"
     )
-    (OUT / "使用说明.txt").write_text(README_TXT, encoding="utf-8")
+    write_crlf(OUT / "使用说明.txt", README_TXT)
 
     log("打包 zip（UTF-8 文件名）")
     zip_path = DIST / "NoGameInClass-portable.zip"
